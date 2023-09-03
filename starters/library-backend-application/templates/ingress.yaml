@@ -1,0 +1,9 @@
+{{- define "app.ingress" -}}
+## Define overrides for your Ingress resource here.
+## It's unlikely that you will need to make any changes to this chart.
+## If you need changes, please slack #arene-na-cloud-services-devops
+{{- end -}}
+
+{{- if .Values.ingress.enabled -}}
+{{- include "library.ingress" (list . "app.ingress") -}}
+{{- end -}}

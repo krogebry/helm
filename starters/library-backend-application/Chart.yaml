@@ -1,0 +1,32 @@
+apiVersion: v2
+type: application
+name: <CHARTNAME>
+version: 0.1.3
+appVersion: 0.1.0
+description: <CHARTNAME>
+
+dependencies:
+  - name: common
+    version: "0.0.5"
+    repository: "https://charts.helm.sh/incubator/"
+  - name: deployment
+    version: "0.0.7"
+    repository: file://../../library/deployment
+  - name: gateway
+    version: "0.0.1"
+    repository: file://../../library/gateway
+  - name: hpa
+    version: "0.0.1"
+    repository: file://../../library/hpa
+  - name: ingress
+    version: "0.0.1"
+    repository: file://../../library/ingress
+  - name: istio_virtual_service
+    version: "0.0.1"
+    repository: file://../../library/istio_virtual_service
+  - name: service
+    version: "0.0.1"
+    repository: file://../../library/service
+  - name: serviceaccount
+    version: "0.0.1"
+    repository: file://../../library/serviceaccount

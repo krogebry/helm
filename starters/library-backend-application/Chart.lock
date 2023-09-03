@@ -1,0 +1,27 @@
+dependencies:
+- name: common
+  repository: https://charts.helm.sh/incubator/
+  version: 0.0.5
+- name: deployment
+  repository: file://../../library/deployment
+  version: 0.0.7
+- name: gateway
+  repository: file://../../library/gateway
+  version: 0.0.1
+- name: hpa
+  repository: file://../../library/hpa
+  version: 0.0.1
+- name: ingress
+  repository: file://../../library/ingress
+  version: 0.0.1
+- name: istio_virtual_service
+  repository: file://../../library/istio_virtual_service
+  version: 0.0.1
+- name: service
+  repository: file://../../library/service
+  version: 0.0.1
+- name: serviceaccount
+  repository: file://../../library/serviceaccount
+  version: 0.0.1
+digest: sha256:8ad4dc0ca084e7c3ffb3913552c5cb1f133a50a8f27075a6c9539b5eff9d3f64
+generated: "2023-06-16T12:40:39.01211-04:00"

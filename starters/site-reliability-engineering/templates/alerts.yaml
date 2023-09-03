@@ -1,0 +1,75 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "<CHARTNAME>.name" . }}-pods
+  labels:
+    team: devops
+    prometheus: prometheus-operaated
+spec:
+  groups:
+    - name: prometheus-pod-failing.rules
+      rules:
+        - alert: PodsUnscheduled
+          expr: kube_pod_status_scheduled{condition=~"false|unknown"} > 0
+          for: 7m
+          labels:
+            #　https://github.com/prometheus-operator/prometheus-operator/pull/4034
+            namespace: monitoring
+            severity: critical
+          annotations:
+            conditionCheck: scheduled
+{{/*            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} in {{ $labels.instance }} have not been scheduled"*/}}
+{{/*            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} in {{ $labels.instance }} have not been scheduled for more than 7m now."*/}}
+        - alert: PodsNotReady
+          expr: |
+            (
+                max by(namespace,pod) (
+                  kube_pod_status_phase{job="kube-state-metrics",phase="Running"}
+                )
+              * on(namespace,pod) group_left(condition)
+                topk by(namespace,pod) (
+                  1,
+                  kube_pod_status_ready{condition=~"false|unknown"}
+                )
+            ) > 0
+          for: 7m
+          labels:
+            namespace: monitoring
+            severity: critical
+          annotations:
+            conditionCheck: ready
+{{/*            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} in {{ $labels.instance }} is not ready"*/}}
+{{/*            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} in {{ $labels.instance }} has not been ready for more than 7m now."*/}}
+        - alert: PodsRestarting
+          expr: increase(kube_pod_container_status_restarts_total[1h]) > 10
+          labels:
+            namespace: monitoring
+            severity: critical
+          annotations:
+{{/*            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been restarting for more than 10 times in the past hour"*/}}
+{{/*            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been restarting for more than 10 times in the past hour"*/}}
+    - name: container-failing
+      rules:
+        - alert: ContainerFailing
+          expr: kube_pod_container_status_ready == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            conditionCheck: scheduled
+            summary: "{{ .Files.Get "snippets/container-failing/summary.tpl" }}"
+            description: "{{ .Files.Get "snippets/container-failing/description.tpl" }}"
+
+        - alert: PodsTerminatedWithErrors
+          expr: |
+            sum by (namespace, pod, container, reason) (kube_pod_container_status_last_terminated_reason{reason!="Completed"})
+              * on (pod, container) group_left
+            sum by (pod, container) (changes(kube_pod_container_status_restarts_total{}[30m]))>0
+          for: 3m
+          labels:
+            namespace: monitoring
+            severity: critical
+          annotations:
+{{/*            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been terminated with reason {{ $labels.reason }}"*/}}
+{{/*            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been terminated before its completion with reason {{ $labels.reason }}"*/}}

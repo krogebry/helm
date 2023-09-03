@@ -1,0 +1,15 @@
+apiVersion: v2
+description: Manging infrastructure for the <CHARTNAME> service
+name: <CHARTNAME>
+type: application
+version: 0.1.0
+appVersion: "dev"
+sources:
+  - https://www.woven-planet.global/assets/images/main_Navlogo.svg
+maintainers:
+  - name: Bryan Kroger
+    email: bryan.kroger@woven-planet.global
+    url: https://github.com/bryan-kroger
+annotations:
+  woven-planet.global/service-owner: service-owner@woven-planet.global
+icon: https://www.woven-planet.global/assets/images/main_Navlogo.svg

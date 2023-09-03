@@ -1,0 +1,15 @@
+apiVersion: v2
+description: Manging infrastructure for the <CHARTNAME> service
+name: <CHARTNAME>
+type: application
+version: 0.1.0
+appVersion: "dev"
+sources:
+  - https://www.gmail.com/assets/images/main_Navlogo.svg
+maintainers:
+  - name: Bryan Kroger
+    email: bryan.kroger@gmail.com
+    url: https://github.com/bryan-kroger
+annotations:
+  gmail.com/service-owner: service-owner@gmail.com
+icon: https://www.gmail.com/assets/images/main_Navlogo.svg

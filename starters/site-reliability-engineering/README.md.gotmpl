@@ -1,0 +1,40 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.sourcesHeader" . }}
+{{ template "chart.sourcesList" . }}
+
+{{ template "chart.maintainersHeader" . }}
+{{ template "chart.maintainersTable" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Local Installation
+
+[Optional]: first get a the current values of the chart so we can replicate what is currently set.
+
+```shell
+helm-deploy get values {{ template "chart.name" .}} > /tmp/{{ template "chart.name" .}}.yaml
+```
+
+Skip the variables and just set the image.tag value:
+
+```
+helm upgrade --install {{ template "chart.name" . }} ./ \
+  --set image.tag=<YOUR_TAG>
+```
+
+Where:
+* YOUR_TAG is any tag you're using to test.
+
+Use the values, this is handy for testing a new version of the helm chart in place:
+
+```shell
+helm-deploy upgrade --install {{ template "chart.name" . }} ./ --values /tmp/{{ template "chart.name" .}}.yaml
+```
+
+{{ template "chart.valuesSection" . }}

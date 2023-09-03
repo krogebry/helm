@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  hosts:
+    - {{ include "mtf-fqdn" . }}
+  gateways:
+    - istio-system/https-gateway
+  http:
+    - name: rest
+      match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            port:
+              number: {{ .Values.service.port }}
+            host: {{ include "<CHARTNAME>.fullname" . }}

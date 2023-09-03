@@ -1,0 +1,7 @@
+{{- define "app.istio_virtual_service" -}}
+## Define overrides for your Istio Virtual Service resource here.
+## It's unlikely that you will need to make any changes to this chart.
+## If you need changes, please slack #arene-na-cloud-services-devops
+{{- end -}}
+
+{{- include "library.istio_virtual_service" (list . "app.istio_virtual_service") -}}

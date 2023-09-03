@@ -1,0 +1,10 @@
+{{- define "app.service" -}}
+spec:
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+{{- end -}}
+
+{{- include "library.service" (list . "app.service") -}}

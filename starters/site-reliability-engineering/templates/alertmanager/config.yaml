@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: {{ include "<CHARTNAME>.name" . }}-config
+  labels:
+    alertmanagerConfig: sre
+spec:
+  global:
+    resolve_timeout: 5m
+  route:
+    groupBy: ['job']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    receiver: 'slack-sre'
+  receivers:
+  - name: 'null'
+  - name: 'apc-na-alerts'
+    slackConfigs:
+    - channel: "#apc-na-alerts"
+      apiURL:
+        key: {{ include "<CHARTNAME>.name" . }}-slack-webhook
+        name: webhookURL
+      sendResolved: true
+      title: "title"
+      text: "text"

@@ -1,0 +1,129 @@
+shared_clusteri:
+ # -- MTF application name
+  app_name: ascender
+  # -- MTF cluster: [aws, gke]
+  cloud: aws
+  # -- MTF cluster family ID: [0, 1]
+  cluster_family_id: 0
+  # -- MTF cluster family: ["gc", "gpu"]
+  cluster_family_name: gc
+  # -- MTF domain
+  domain: infra.mydomain.com
+  # -- Enable MTF FQDN hosts
+  enable_mtf_fqdn_host: true
+  # -- MTF prod or non-prod: [apps-prod, apps]
+  env_name: apps # apps or apps-prod
+  # -- MTF region: [us-east-1, ap-northeast-1, us-central1]
+  region: ap-northeast-1
+
+vault:
+  url: https://dev.vault.tmc-stargate.com
+  role: jwt_mtfuji_gc_0_apps_us_east_1_cloud_services
+  path: jwt_mtfuji_gc_0_apps_us_east_1
+  namespace: ns_stargate/ns_dev_arenepe_cloudservicesdevops
+  secret_mount_path: devops
+
+app:
+  # -- Application name
+  name: grpc
+  # -- Environment name
+  env: dev
+  environment_vars: []
+  # -- Disable istio if you need to use a custom oauth provider
+  disable_istio: false
+  readiness_endpoint: /healthz
+  volumes: []
+  volumeMounts: []
+
+telegraf:
+  enabled: false
+
+fullname:
+
+gateway:
+  enabled: true
+
+image:
+  pullPolicy: Always
+  # The docker image to deploy.  YOU MUST SPECIFY THIS.
+  repository: docker.artifactory-ha.tmc-stargate.com/nginx
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "dev"
+
+imagePullSecrets:
+  - name: ext-docker-regcred
+
+# -- Things managed by AVOps
+infra:
+  # -- Name of the environment key: dev, stg, prod.  CHANGE THIS TO DEPLOY TO STAGE OR PROD.
+  env_name: dev
+
+ingress:
+  annotations: {}
+  className: ""
+  enabled: false
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+name:
+
+nodeSelector: {}
+
+oauth2_proxy:
+  enabled: false
+
+podAnnotations:
+  seccomp.security.alpha.kubernetes.io/pod: runtime/default
+
+podSecurityContext: {}
+
+release_monitor:
+  enabled: false
+
+replicaCount: 1
+
+resources:
+  limits:
+    cpu: "400m"
+    memory: "4000Mi"
+    ephemeral-storage: "5Gi"
+  requests:
+    cpu: "200m"
+    memory: "2000Mi"
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - all
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsGroup: 10000
+  runAsNonRoot: true
+  runAsUser: 10000
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  port: 8080
+  type: ClusterIP
+
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+  # Specifies whether a service account should be created
+  create: true
+
+tolerations: []
+affinity: {}
+
+autoscaling:
+  enabled: false
+  maxReplicas: 100
+  minReplicas: 1
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80

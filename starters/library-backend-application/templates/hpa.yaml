@@ -1,0 +1,9 @@
+{{- define "app.hpa" -}}
+## Define overrides for your K8s Horizontal Pod Autoscaler resource here.
+## It's unlikely that you will need to make any changes to this chart.
+## If you need changes, please slack #arene-na-cloud-services-devops
+{{- end -}}
+
+{{- if .Values.ingress.enabled -}}
+{{- include "library.hpa" (list . "app.hpa") -}}
+{{- end -}}

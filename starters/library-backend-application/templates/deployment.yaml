@@ -1,0 +1,4 @@
+{{- define "app.deployment" -}}
+{{- end -}}
+
+{{- include "library.deployment" (list . "app.deployment") -}}
