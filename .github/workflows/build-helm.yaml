@@ -54,11 +54,11 @@ jobs:
   lint:
     runs-on: [k3s]
 
-    container:
-      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
-      credentials:
-        username: ${{ secrets.docker_username }}
-        password: ${{ secrets.docker_password }}
+#    container:
+#      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+#      credentials:
+#        username: ${{ secrets.docker_username }}
+#        password: ${{ secrets.docker_password }}
 
     steps:
       - uses: actions/checkout@v3
@@ -76,11 +76,11 @@ jobs:
     needs:
       - lint
 
-    container:
-      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
-      credentials:
-        username: ${{ secrets.docker_username }}
-        password: ${{ secrets.docker_password }}
+#    container:
+#      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+#      credentials:
+#        username: ${{ secrets.docker_username }}
+#        password: ${{ secrets.docker_password }}
 
     steps:
       - uses: actions/checkout@v3
@@ -106,11 +106,11 @@ jobs:
     needs:
       - helm-deploy
 
-    container:
-      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
-      credentials:
-        username: ${{ secrets.docker_username }}
-        password: ${{ secrets.docker_password }}
+#    container:
+#      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+#      credentials:
+#        username: ${{ secrets.docker_username }}
+#        password: ${{ secrets.docker_password }}
 
     env:
       GOPRIVATE: github.com/krogebry/golibs
@@ -161,11 +161,11 @@ jobs:
     needs:
       - test
 
-    container:
-      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
-      credentials:
-        username: ${{ secrets.docker_username }}
-        password: ${{ secrets.docker_password }}
+#    container:
+#      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+#      credentials:
+#        username: ${{ secrets.docker_username }}
+#        password: ${{ secrets.docker_password }}
 
     steps:
       - uses: actions/checkout@v3
