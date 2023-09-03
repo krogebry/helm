@@ -1,0 +1,180 @@
+name: Build a helm chart
+
+permissions:
+  issues: write # This is required for .github/actions/action-review-tool
+  checks: write # This is required for synced-actions/mikepenz-action-junit-report
+  contents: read # This is required for actions/checkout
+  id-token: write # This is required for requesting the JWT
+  pull-requests: write # This is required for actions/github-script
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        default: dev
+        description: Deployment Environment ( dev, stage, prod )
+
+      helm_repo_name:
+        type: string
+        required: true
+      helm_chart_name:
+        type: string
+        required: true
+      helm_chart_path:
+        type: string
+        default: charts
+        required: false
+      helm_chart_test_path:
+        type: string
+        default: test
+        required: false
+      helm_values_path:
+        type: string
+        default: .deploy
+        required: false
+
+      publish:
+        type: string
+        default: true
+        required: false
+
+    secrets:
+      git_ssh_key:
+        required: true
+      sg_github_token:
+        required: true
+      docker_username:
+        required: true
+      docker_password:
+        required: true
+
+jobs:
+
+  lint:
+    runs-on: [k3s]
+
+    container:
+      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+      credentials:
+        username: ${{ secrets.docker_username }}
+        password: ${{ secrets.docker_password }}
+
+    steps:
+      - uses: actions/checkout@v3
+        if: startsWith(github.ref, 'refs/tags/') == false
+
+      - uses: .github/actions/helm-lint@v0.2.16
+        with:
+          helm_chart_path: ${{ inputs.helm_chart_path }}
+
+  helm-deploy:
+    runs-on: [k3s]
+
+    environment: dev
+
+    needs:
+      - lint
+
+    container:
+      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+      credentials:
+        username: ${{ secrets.docker_username }}
+        password: ${{ secrets.docker_password }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Getting short SHA
+        run: echo "SHORT_SHA=$(echo ${{github.sha}}|cut -c1-8)" >> $GITHUB_ENV
+
+      - id: local-deploy
+        uses: .github/actions/helm-deploy-local@v0.2.16
+        with:
+          image_tag: dev
+          environment: dev
+          extra_sets: "--set \"name=${{ inputs.helm_chart_name }}-${{ env.SHORT_SHA }}\""
+          helm_chart_name: ${{ inputs.helm_chart_name }}
+          helm_chart_path: ${{ inputs.helm_chart_path }}
+          helm_values_path: ${{ inputs.helm_values_path }}
+
+  test:
+    runs-on: [k3s]
+
+    environment: dev
+
+    needs:
+      - helm-deploy
+
+    container:
+      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+      credentials:
+        username: ${{ secrets.docker_username }}
+        password: ${{ secrets.docker_password }}
+
+    env:
+      GOPRIVATE: github.com/krogebry/golibs
+      GIT_SSH_COMMAND: "echo '${{ secrets.git_ssh_key }}' | base64 -d > id_rsa
+        && ssh-keyscan github.com > known_hosts
+        && chmod 600 id_rsa known_hosts
+        && ssh -i ./id_rsa -o UserKnownHostsFile=./known_hosts"
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.helm_chart_path }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get short SHA
+        run: echo "SHORT_SHA=$(echo ${{github.sha}}|cut -c1-8)" >> $GITHUB_ENV
+
+      - id: setup-private-github
+        run: |
+          git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
+          cat ~/.gitconfig
+
+      - uses: .github/actions/helm-terratest@v0.2.16
+        with:
+          stack_id: ${{ inputs.helm_chart_name }}-${{ env.SHORT_SHA }}
+          namespace: ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }}
+          test_directory: ${{ inputs.helm_chart_path }}/${{ inputs.helm_chart_test_path }}
+          sg_github_token: ${{ secrets.sg_github_token }}
+
+      - uses: .github/actions/helm-kube-score@v0.2.16
+        with:
+          stack_id: ${{ inputs.helm_chart_name }}-${{ env.SHORT_SHA }}
+          namespace: ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }}
+
+      - id: helm-cleanup
+        name: Uninstall helm chart
+        run: |
+          helm \
+            delete \
+            --namespace ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }} \
+            ${{ inputs.helm_chart_name }}-${{ env.SHORT_SHA }}
+
+  publish:
+    runs-on: [k3s]
+    if: github.ref == 'refs/heads/main' && inputs.publish == 'true'
+
+    needs:
+      - test
+
+    container:
+      image: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner:latest
+      credentials:
+        username: ${{ secrets.docker_username }}
+        password: ${{ secrets.docker_password }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: .github/actions/helm-publish@v0.2.16
+        with:
+          helm_repo_url: ${{ inputs.helm_repo_url }}
+          helm_repo_name: ${{ inputs.helm_repo_name }}
+          helm_chart_name: ${{ inputs.helm_chart_name }}
+          helm_chart_path: ${{ inputs.helm_chart_path }}
+          artifactory_username: ${{ secrets.docker_username }}
+          artifactory_api_key: ${{ secrets.docker_password }}

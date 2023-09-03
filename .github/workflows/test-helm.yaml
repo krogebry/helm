@@ -1,0 +1,32 @@
+name: Helm build cloud-services charts
+
+# test2
+
+on:
+  push:
+    paths:
+      - ".github/workflows/test-helm.yaml"
+      - "charts/app-backend/**"
+
+permissions:
+  issues: write # This is required for Innersource/build-infra-actions/action-review-tool
+  checks: write # This is required for synced-actions/mikepenz-action-junit-report
+  contents: read # This is required for actions/checkout
+  id-token: write # This is required for requesting the JWT
+  pull-requests: write # This is required for actions/github-script
+
+jobs:
+  test-basic-application:
+    uses: sg-innersource/cloud-services-workflows/.github/workflows/build-helm.yaml@v0.1.13
+    with:
+      publish: false
+      helm_repo_name: krogebry
+      helm_chart_path: charts/library/test/basic-application
+      helm_chart_test_path: test/no_values
+      helm_chart_name: ba-no-values
+      helm_values_path: .deploy/no_values
+    secrets:
+      git_ssh_key: ${{ secrets.GIT_SSH_KEY }}
+      sg_github_token: ${{ secrets.SG_GITHUB_LEGACY_TOKEN }}
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
