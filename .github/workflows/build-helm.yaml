@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v3
         if: startsWith(github.ref, 'refs/tags/') == false
 
-      - uses: ./.github/actions/helm-lint@v0.2.16
+      - uses: ./.github/actions/helm-lint
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
 
@@ -134,14 +134,14 @@ jobs:
           git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
           cat ~/.gitconfig
 
-      - uses: .github/actions/helm-terratest@v0.2.16
+      - uses: ./.github/actions/helm-terratest
         with:
           stack_id: ${{ inputs.helm_chart_name }}-${{ env.SHORT_SHA }}
           namespace: ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }}
           test_directory: ${{ inputs.helm_chart_path }}/${{ inputs.helm_chart_test_path }}
           sg_github_token: ${{ secrets.sg_github_token }}
 
-      - uses: .github/actions/helm-kube-score@v0.2.16
+      - uses: ./.github/actions/helm-kube-score
         with:
           stack_id: ${{ inputs.helm_chart_name }}-${{ env.SHORT_SHA }}
           namespace: ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }}
@@ -170,7 +170,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: .github/actions/helm-publish@v0.2.16
+      - uses: ./.github/actions/helm-publish
         with:
           helm_repo_url: ${{ inputs.helm_repo_url }}
           helm_repo_name: ${{ inputs.helm_repo_name }}
