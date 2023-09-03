@@ -1,0 +1,64 @@
+#!/usr/bin/env just --justfile
+# go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest
+GOPRIVATE := "github.com/krogebry/golibs/helm_tests/utils"
+
+get-all branch="main":
+    just get {{ branch }} autoscaling
+    just get {{ branch }} gateway
+    just get {{ branch }} no_values
+    just get {{ branch }} many_docker_regcreds
+    just get {{ branch }} with_oauth2
+    just get {{ branch }} with_telegraf
+    just get {{ branch }} with_telegraf_and_oauth2
+
+get branch="main" test="no_values":
+    cd {{ test }} && \
+      go get github.com/krogebry/golibs/helm_tests/istio@{{ branch }} && \
+      go get github.com/krogebry/golibs/helm_tests/utils@{{ branch }} && \
+      go get github.com/krogebry/golibs/helm_tests/secrets@{{ branch }} && \
+      go get github.com/krogebry/golibs/helm_tests/telegraf@{{ branch }} && \
+      go get github.com/krogebry/golibs/helm_tests/oauth2_proxy@{{ branch }} && \
+      go get github.com/krogebry/golibs/helm_tests/common@{{ branch }}
+
+deploy-all stack-id="001":
+    just deploy t-{{ stack-id }}-autoscaling autoscaling
+    just deploy t-{{ stack-id }}-gateway gateway
+    just deploy t-{{ stack-id }}-no-values no_values
+    just deploy t-{{ stack-id }}-many-docker-regcreds many_docker_regcreds
+    just deploy t-{{ stack-id }}-with-oauth2 oauth2
+    just deploy t-{{ stack-id }}-with-telegraf telegraf
+    just deploy t-{{ stack-id }}-with-all telegraf_and_oauth2
+
+deploy stack-id values="no_values":
+    helm upgrade \
+        --install \
+        {{ stack-id }} \
+        ../ \
+        --values ../.deploy/{{ values }}/dev.yaml \
+        --set name={{ stack-id }} --set "mount_fuji.region=us-east-1"
+
+test-raw stack-id test="no_values":
+    cd {{ test }} && STACK_ID={{ stack-id }} \
+      DEBUG=true \
+      NAMESPACE=application-dev \
+      go test -v
+
+test-fmt stack-id test="no_values":
+    cd {{ test }} && STACK_ID={{ stack-id }} \
+      NAMESPACE=application-dev \
+      go test -json \
+      | grep -v "logger.go:66" \
+      | grep -v "client.go:42" \
+      | ~/go/bin/gotestfmt
+
+test-fmt-all stack-id="001":
+    just test-fmt t-{{ stack-id }}-autoscaling autoscaling
+    just test-fmt t-{{ stack-id }}-gateway gateway
+    just test-fmt t-{{ stack-id }}-no-values no_values
+    just test-fmt t-{{ stack-id }}-many-docker-regcreds many_docker_regcreds
+    just test-fmt t-{{ stack-id }}-with-oauth2 with_oauth2
+    just test-fmt t-{{ stack-id }}-with-telegraf with_telegraf
+    just test-fmt t-{{ stack-id }}-with-all with_telegraf_and_oauth2
+
+dep-update:
+    cd .. && helm dep update --skip-refresh
