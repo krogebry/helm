@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - ".github/workflows/test-helm.yaml"
+      - ".github/actions/**"
       - "charts/app-backend/**"
 
 permissions:
