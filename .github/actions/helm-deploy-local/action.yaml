@@ -2,6 +2,9 @@
 name: Local helm deploy
 description: Local helm chart deployment to Mt Fuji
 inputs:
+  application_name:
+    required: true
+
   environment:
     description: "Which environment to deploy into"
     required: true
@@ -54,7 +57,7 @@ runs:
         helm upgrade --install \
           ${{ inputs.helm_chart_name }}-${SHORT_SHA}  \
           . \
-          --namespace ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }} \
+          --namespace ${{ inputs.application_name }}-${{ inputs.environment }} \
           --values ${{ inputs.helm_values_path }}/${{ inputs.environment }}.yaml \
           --set "image.tag=${{ inputs.image_tag }}" \
           ${{ inputs.extra_sets }} \

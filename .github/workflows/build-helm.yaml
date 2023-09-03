@@ -97,6 +97,7 @@ jobs:
           helm_chart_name: ${{ inputs.helm_chart_name }}
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_path: ${{ inputs.helm_values_path }}
+          application_name: myapp
 
   test:
     runs-on: [k3s]
