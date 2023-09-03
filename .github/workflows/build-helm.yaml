@@ -89,7 +89,7 @@ jobs:
         run: echo "SHORT_SHA=$(echo ${{github.sha}}|cut -c1-8)" >> $GITHUB_ENV
 
       - id: local-deploy
-        uses: .github/actions/helm-deploy-local
+        uses: ./.github/actions/helm-deploy-local
         with:
           image_tag: dev
           environment: dev
