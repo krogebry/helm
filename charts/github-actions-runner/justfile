@@ -1,0 +1,16 @@
+
+build tag="latest":
+    docker build -t 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner .
+
+push tag="latest":
+    docker push 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner
+
+regcred:
+    kubectl create secret docker-registry regcred \
+      --docker-server=903369196314.dkr.ecr.us-east-.amazonaws.com \
+      --docker-username=AWS \
+      --docker-password=$(aws ecr get-login-password) \
+      --namespace=github
+
+install:
+    helm upgrade --install ghr . --set "runner.ghr_pat_token=$(cat ~/.github/token)"

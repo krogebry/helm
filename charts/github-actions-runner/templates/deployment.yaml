@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "github-actions-runner.fullname" . }}
+  labels:
+    {{- include "github-actions-runner.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "github-actions-runner.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "github-actions-runner.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "github-actions-runner.serviceAccountName" . }}
+      automountServiceAccountToken: true
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: workspace
+          emptyDir: {}
+        - name: state
+          emptyDir: {}
+        - name: runner-state
+          emptyDir: {}
+
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: configure
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: RUNNER_SCOPE
+              value: {{ .Values.runner.scope }}
+            - name: RUNNER_URL
+              value: {{ .Values.runner.url }}
+            - name: RUNNER_NAME
+              value: {{ .Values.runner.name }}
+            - name: RUNNER_LABELS
+              value: {{ .Values.runner.labels }}
+            - name: RUNNER_REGISTRATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "github-actions-runner.fullname" . }}
+                  key: ghr_pat_token
+          volumeMounts:
+            - name: state
+              mountPath: /home/actions/runner-state
+
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -eEuo pipefail
+
+              rundir=/home/actions/runner-state
+              cp -r ./. ${rundir}
+              cd ${rundir}
+              ./config.sh \
+                --name "${RUNNER_NAME}" \
+                --token "${RUNNER_REGISTRATION_TOKEN}" \
+                --url "${RUNNER_URL}" \
+                --labels "${RUNNER_LABELS}" \
+                --work _work \
+                --unattended \
+                --replace
+
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - name: state
+              mountPath: /home/actions/runner-state
+            - name: workspace
+              mountPath: /home/actions/runner-state/_work
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -eEuo pipefail
+              cd /home/actions/runner-state
+              python3 -m http.server 8080 &
+              ./run.sh --url "{{ .Values.runner.url }}" --lables "{{ .Values.runner.labels }}"
+              # ./entrypoint.sh --url "{{ .Values.runner.url }}" --lables "{{ .Values.runner.labels }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

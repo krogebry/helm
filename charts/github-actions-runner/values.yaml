@@ -1,0 +1,91 @@
+# Default values for github-actions-runner.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- If not using autoscaling, set the desired runner count
+replicaCount: 1
+
+imagePullSecrets:
+  - name: regcred
+nameOverride: ""
+fullnameOverride: ""
+
+#  url:
+image:
+  repository: 903369196314.dkr.ecr.us-east-1.amazonaws.com/github-action-runner
+  tag: latest
+  pullPolicy: IfNotPresent
+
+runner:
+  # -- URL of the project
+  url: "https://github.com/krogebry/helm"
+  # -- Set if you want custom runner names. Defaults to the pod name
+  name: ""
+  # -- Either `myorg` or `myorg/myrepo` for an organization-scoped runner or repo-scoped runner, respectively.
+  scope: ""
+  # -- The Personal Authentication Token used to auth and create runners for this project
+  ghr_pat_token: ""
+  # -- Optional labels for the runner to match against in your workflows
+  labels: "k3s"
+
+hostNetwork:
+  enabled: false
+
+serviceAccount:
+  create: true
+  annotations: {}
+  # -- If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+persistence:
+  # -- Highly recommended so runners can retain their registration and renew tokens automatically
+  enabled: true
+  # storageClass: "-"
+  # existingClaim: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  annotations: {}
+
+podAnnotations: {}
+podManagementPolicy: "Parallel"
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 50
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  seccompProfile:
+    type: RuntimeDefault
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  privileged: false
+  capabilities:
+    drop:
+      - all
+
+#resources:
+#  limits:
+#    cpu: 500m
+#    memory: 1028Mi
+#  requests:
+#    cpu: 500m
+#    memory: 1028Mi
