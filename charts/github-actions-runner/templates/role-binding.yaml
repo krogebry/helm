@@ -6,6 +6,10 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: {{ include "github-actions-runner.serviceAccountName" . }}
+  namespace: myapp-dev
+- kind: ServiceAccount
+  name: {{ include "github-actions-runner.serviceAccountName" . }}
+  namespace: github
 roleRef:
   kind: Role #this must be Role or ClusterRole
   name: {{ include "github-actions-runner.serviceAccountName" . }}
