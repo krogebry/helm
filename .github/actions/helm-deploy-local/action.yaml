@@ -1,0 +1,75 @@
+# Local
+name: Local helm deploy
+description: Local helm chart deployment to Mt Fuji
+inputs:
+  environment:
+    description: "Which environment to deploy into"
+    required: true
+    type: choice
+    options:
+      - "dev"
+      - "stg"
+      - "stage"
+      - "prod"
+
+  image_tag:
+    type: string
+    required: true
+    description: "Container version to deploy"
+
+  helm_chart_name:
+    type: string
+    required: true
+    description: "Helm chart name"
+
+  helm_chart_path:
+    type: string
+    required: true
+    description: "Helm chart path"
+
+  extra_sets:
+    type: string
+    default: ""
+    required: false
+    description: "Extra --set flags"
+
+  helm_values_path:
+    type: string
+    default: "."
+    required: false
+    description: "Where to find the helm chart value overrides per environment"
+
+runs:
+  using: composite
+  steps:
+    - name: Helm Deploy
+      id: helm-deploy
+      shell: bash
+      working-directory: ${{ inputs.helm_chart_path }}
+      continue-on-error: true
+      run: |
+        export SHORT_SHA=$(echo ${{github.sha}}|cut -c1-8)
+        helm dep update
+        
+        helm upgrade --install \
+          ${{ inputs.helm_chart_name }}-${SHORT_SHA}  \
+          . \
+          --namespace ${{ inputs.mtfuji_application_name }}-${{ inputs.environment }} \
+          --values ${{ inputs.helm_values_path }}/${{ inputs.environment }}.yaml \
+          --set "image.tag=${{ inputs.image_tag }}" \
+          ${{ inputs.extra_sets }} \
+          |& tee /tmp/out-${{ github.run_id }}
+
+    - name: Update Job Summary
+      shell: bash
+      run: |
+        echo '## Helm Deploy' >>$GITHUB_STEP_SUMMARY
+        OUTPUT=$(cat /tmp/out-${{ github.run_id }} | sed -E 's/^([[:space:]]+)([-+])/\2\1/g')
+        echo -e "\`\`\`\n ${OUTPUT} \n\`\`\`" >>$GITHUB_STEP_SUMMARY
+
+    - name: Status
+      if: steps.helm-deploy.outcome == 'failure'
+      shell: bash
+      run: |
+        echo -e ":red_circle: Helm Deploy Failure" >> $GITHUB_STEP_SUMMARY
+        exit 1
