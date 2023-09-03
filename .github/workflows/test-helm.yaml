@@ -23,9 +23,9 @@ jobs:
     with:
       publish: false
       helm_repo_name: krogebry
-      helm_chart_path: charts/library/test/basic-application
+      helm_chart_path: charts/app-backend
       helm_chart_test_path: test/no_values
-      helm_chart_name: ba-no-values
+      helm_chart_name: app-be-no-values
       helm_values_path: .deploy/no_values
     secrets:
       git_ssh_key: ${{ secrets.GIT_SSH_KEY }}
