@@ -28,7 +28,7 @@ All starter charts have these attributes by default.
 
 * Default vault side car injection.
 
-## Mount Fuji - GoLang - Rest service starter
+## GoLang - Rest service starter
 
 This starter includes some nice things that we expect to have in a basic GoLang RESTful service.
 
