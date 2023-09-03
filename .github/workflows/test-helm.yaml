@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   test-basic-application:
-    uses: .github/workflows/build-helm.yaml@workflows
+    uses: ./.github/workflows/build-helm.yaml@workflows
     with:
       publish: false
       helm_repo_name: krogebry
