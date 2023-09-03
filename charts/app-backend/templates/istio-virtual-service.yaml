@@ -4,7 +4,7 @@ metadata:
   name: {{ .Chart.Name }}
 spec:
   hosts:
-    - {{ include "mtf-fqdn" . }}
+    - hostname.fqdn.com
   gateways:
     - istio-system/https-gateway
   http:
