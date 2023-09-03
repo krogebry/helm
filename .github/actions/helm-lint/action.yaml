@@ -1,0 +1,35 @@
+name: Helm snyk scan
+description: Run snyk on a deployed helm chart
+inputs:
+  helm_chart_path:
+    type: string
+    required: true
+    description: Unique name of the stack to test
+
+runs:
+  using: composite
+  steps:
+    - id: scan
+      name: Helm lint
+      shell: bash
+      continue-on-error: true
+      working-directory: ${{ inputs.helm_chart_path }}
+      run: |
+        set -xe
+        echo "## Helm lint" >> $GITHUB_STEP_SUMMARY
+        helm dep update
+        helm lint |& tee out-${{ github.run_id }}
+
+    - name: Update Job Summary
+      shell: bash
+      working-directory: ${{ inputs.helm_chart_path }}
+      run: |
+        OUTPUT=$(cat out-${{ github.run_id }} | sed -E 's/^([[:space:]]+)([-+])/\2\1/g')
+        echo -e "\`\`\`\n ${OUTPUT} \n\`\`\`" >>$GITHUB_STEP_SUMMARY
+
+    - name: Status
+      if: steps.scan.outcome == 'failure'
+      shell: bash
+      run: |
+        echo -e ":red_circle: Failure" >> $GITHUB_STEP_SUMMARY
+        exit 1
