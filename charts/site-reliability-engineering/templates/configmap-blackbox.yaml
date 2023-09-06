@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "apc-cp-sre.fullname" . }}-blackbox
+  labels:
+    {{- include "apc-cp-sre.labels" . | nindent 4 }}
+data:
+  blackbox.yaml: |
+{{ tpl (.Files.Get "configs/blackbox.yaml") . | indent 4 }}

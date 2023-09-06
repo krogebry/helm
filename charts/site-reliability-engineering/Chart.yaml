@@ -1,0 +1,5 @@
+apiVersion: v2
+name: site-reliability-engineering
+type: application
+version: 0.2.0
+description: Adding SRE monitoring elements with telegraf and blackbox

@@ -1,0 +1,61 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.sourcesHeader" . }}
+{{ template "chart.sourcesList" . }}
+
+{{ template "chart.maintainersHeader" . }}
+{{ template "chart.maintainersTable" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Queries
+
+```shell
+sum by (datname) (rate(pg.stat.database.blks.hit{
+  datname=~"$db",job=~"$job",instance=~"$instance"}[$..rate.interval]
+})) / (sum by (datname)(
+  rate(pg.stat.database.blks.hit{datname=~"$db",job=~"$job",instance=~"$instance"}[$..rate.interval])) + 
+  sum by (datname)(rate(pg.stat.database.blks.read{datname=~"$db",job=~"$job",instance=~"$instance"}[$..rate.interval])))
+```
+
+Converts to:
+
+```shell
+sum by (datname) (rate(
+app.company.team.project.pg.stat.database.blks.hit.counter.counter{datname="apccontrolplanedev", namespace="mtfuji-apc-cp-dev"}[5m]
+)) / (sum by (datname)(rate(
+app.company.team.project.pg.stat.database.blks.hit.counter.counter{datname="apccontrolplanedev", namespace="mtfuji-apc-cp-dev"}[5m]
+)) + sum by (datname)(rate(
+app.company.team.project.pg.stat.database.blks.read.counter.counter{datname="apccontrolplanedev", namespace="mtfuji-apc-cp-dev"}[5m]
+)))
+```
+
+## Local testing
+
+[docs](https://github.com/prometheus/blackbox_exporter/blob/master/CONFIGURATION.md#grpc_probe)
+
+The `blackbox.yaml` file is used for testing local changes and exploring with the idea.
+
+First start the container:
+```shell
+docker run \
+  --rm \
+  -p 9115:9115 \
+  -v ./blackbox.yaml:/etc/blackbox.yaml \
+  -v $(pwd):/config \
+  --name blackbox_exporter \
+  quay.io/prometheus/blackbox-exporter:latest --config.file=/etc/blackbox.yaml --log.level=debug
+```
+
+Now curl the local endpoint to invoke a module test:
+
+```shell
+curl "http://localhost:9115/probe?module=http_2xx_proxy&target=https://visualizer.dev.apc.arene.com"
+```
+
+{{ template "chart.valuesSection" . }}

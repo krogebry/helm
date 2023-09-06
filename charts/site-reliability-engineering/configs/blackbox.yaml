@@ -1,0 +1,139 @@
+{{ $env_name := .Values.infra.env_name }}
+{{ $domain_name := include "domain-name" . }}
+{{ $short_domain_name := include "short-api-domain-name" . }}
+{{ $api_short_domain_name := include "short-api-domain-name" . }}
+---
+modules:
+  https_oauth_blocked:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+      valid_status_codes: [ 302 ]
+      method: GET
+      no_follow_redirects: true
+      fail_if_ssl: false
+      fail_if_not_ssl: true
+      fail_if_header_not_matches:
+        - header: location
+          regexp: 'login.windows.net'
+      tls_config:
+        insecure_skip_verify: false
+      preferred_ip_protocol: "ip4"
+      ip_protocol_fallback: false
+
+  tls_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      tls: true
+
+  dns_shared_cluster:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "check"
+      query_type: "CNAME"
+      transport_protocol: 'udp'
+      preferred_ip_protocol: "ip4"
+      validate_answer_rrs:
+        fail_if_not_matches_regexp:
+          - 'aws.infra.shared_cluster.w3n.io'
+
+  grpc:
+    prober: grpc
+    grpc:
+      tls: true
+      preferred_ip_protocol: "ip4"
+  grpc_plain:
+    prober: grpc
+    grpc:
+      tls: false
+
+  http_visualizer:
+    prober: http
+    http:
+      valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+      valid_status_codes: [ 200 ]
+      method: GET
+      no_follow_redirects: true
+      fail_if_ssl: false
+      fail_if_not_ssl: true
+      proxy_url: "http://bridge-1234.elb.us-east-1.amazonaws.com:3128"
+      fail_if_body_not_matches_regexp:
+        - "<title>Streamlit</title>"
+      tls_config:
+        insecure_skip_verify: false
+      preferred_ip_protocol: "ip4"
+      ip_protocol_fallback: false
+
+  http_vcs:
+    prober: http
+    http:
+      valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+      valid_status_codes: [ 200 ]
+      method: GET
+      no_follow_redirects: true
+      fail_if_ssl: false
+      fail_if_not_ssl: true
+      fail_if_body_not_matches_regexp:
+        - "hello world"
+      fail_if_header_not_matches:
+        - header: server
+          regexp: 'envoy'
+      tls_config:
+        insecure_skip_verify: false
+      preferred_ip_protocol: "ip4"
+      ip_protocol_fallback: false
+
+  http_2xx_proxy:
+    prober: http
+    timeout: 5s
+    http:
+      proxy_url: "http://bridge-1234.elb.us-east-1.amazonaws.com:3128"
+      valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+      follow_redirects: false
+      preferred_ip_protocol: "ip4"
+
+  # DNS checks for all services expected to have Istio Virtual Services
+{{- range $virtual_service_endpoint_name := .Values.services.virtual_service_endpoint_names }}
+  {{ $virtual_service_endpoint_name }}.{{ $domain_name }}:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "{{ $virtual_service_endpoint_name }}.{{ $domain_name }}"
+      query_type: "A"
+      transport_protocol: 'udp'
+      preferred_ip_protocol: "ip4"
+{{- end }}
+
+  # apc.arene.com short FQDNs
+{{- range $short_name := .Values.services.short_names }}
+  {{ $short_name }}.{{ $short_domain_name }}:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "{{ $short_name }}.{{ $short_domain_name }}"
+      query_type: "CNAME"
+      transport_protocol: 'udp'
+      preferred_ip_protocol: "ip4"
+      validate_answer_rrs:
+        fail_if_not_matches_regexp:
+          - {{ $short_name }}-{{ $domain_name }}
+{{- end }}
+
+  # api.apc.arene.com short FQDNs
+{{- range $short_name := .Values.services.api_short_names }}
+  {{ $short_name }}.{{ $short_domain_name }}:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "{{ $short_name }}.{{ $api_short_domain_name }}"
+      query_type: "CNAME"
+      transport_protocol: 'udp'
+      preferred_ip_protocol: "ip4"
+      validate_answer_rrs:
+        fail_if_not_matches_regexp:
+          - {{ $short_name }}-{{ $domain_name }}
+{{- end }}
+

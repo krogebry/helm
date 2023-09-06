@@ -37,21 +37,6 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          env:
-            - name: DB_HOSTNAME
-              value: {{.Values.database.hostname}}
-            - name: DB_PORT
-              value: {{.Values.database.port}}
-            - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key: username
-                  name: db-credentials
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: db-credentials
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
             - mountPath: /tmp

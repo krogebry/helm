@@ -11,15 +11,15 @@ on:
       - "charts/app-backend/**"
 
 permissions:
-  issues: write # This is required for Innersource/build-infra-actions/action-review-tool
-  checks: write # This is required for synced-actions/mikepenz-action-junit-report
-  contents: read # This is required for actions/checkout
-  id-token: write # This is required for requesting the JWT
-  pull-requests: write # This is required for actions/github-script
+  issues: write
+  checks: write
+  contents: read
+  id-token: write
+  pull-requests: write
 
 jobs:
   test-basic-application:
-    uses: krogebry/workflows/build-helm.yaml@main
+    uses: krogebry/workflows/.github/workflows/build-helm.yaml@v0.1.0
     with:
       publish: false
       helm_repo_name: krogebry
