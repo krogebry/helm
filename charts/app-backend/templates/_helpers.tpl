@@ -5,10 +5,6 @@ Expand the name of the chart.
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "mtf-fqdn" -}}
-{{ .Values.shared_clusteri.app_name }}-{{ .Values.shared_clusteri.namespace_name }}.{{ .Values.shared_clusteri.cluster_family_name }}-{{.Values.shared_clusteri.cluster_family_id }}-{{.Values.shared_clusteri.env_name }}-{{ .Values.shared_clusteri.region}}.{{ .Values.shared_clusteri.cloud }}.{{ .Values.shared_clusteri.domain }}
-{{- end }}
-
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).

@@ -4,7 +4,7 @@ metadata:
   name: {{ include "<CHARTNAME>.fullname" . }}
 spec:
   hosts:
-    - {{ include "mtf-fqdn" . }}
+    - hostname
   gateways:
     - istio-system/https-gateway
   http:
