@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "apc-cp-sre.fullname" . }}
+  labels:
+    {{- include "apc-cp-sre.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "apc-cp-sre.selectorLabels" . | nindent 6 }}
+  strategy:
+{{ toYaml .Values.strategy | indent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "apc-cp-sre.labels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+{{ toYaml .Values.podAnnotations | indent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      serviceAccountName: {{ template "apc-cp-sre.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: {{ .Values.restartPolicy }}
+
+      securityContext:
+{{ toYaml .Values.podSecurityContext | indent 8 }}  
+      containers:
+        - name: postgres-exporter
+          image: docker.artifactory-ha.tmc-stargate.com/arene/plane/core/sre/postgres-exporter:v0.12.1
+          imagePullPolicy: Always
+          env:
+            - name: DATA_SOURCE_URI
+              value: "{{ .Values.database.hostname }}:5432/postgres"
+{{/*            - name: DATA_SOURCE_URI*/}}
+{{/*              valueFrom:*/}}
+{{/*                secretKeyRef:*/}}
+{{/*                  key: hostname*/}}
+{{/*                  name: database-credentials*/}}
+            - name: PG_EXPORTER_INCLUDE_DATABASES
+              value: {{.Values.database.name}}
+{{/*            - name: PG_EXPORTER_AUTO_DISCOVER_DATABASES*/}}
+{{/*              value: "true"*/}}
+            - name: DB_PORT
+              value: "{{.Values.database.port}}"
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: database-credentials
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: database-credentials
+          securityContext:
+           {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: pg-exporter
+              containerPort: 9187
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+        - name: telegraf
+          image: docker.artifactory-ha.tmc-stargate.com/arene/plane/core/sre/telegraf:1.25
+          imagePullPolicy: Always
+          securityContext:
+           {{- toYaml .Values.securityContext | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              port: telegraf
+              path: /metrics
+          readinessProbe:
+            httpGet:
+              port: telegraf
+              path: /metrics
+          volumeMounts:
+            - name: telegraf-config
+              mountPath: /etc/telegraf
+          ports:
+            - name: telegraf
+              containerPort: {{ .Values.service.port }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+        - name: blackbox-exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+          {{- range $key, $value := .Values.extraEnv }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          args:
+            - "--log.level=debug"
+            - "--config.file=/config/blackbox.yaml"
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+              name: blackbox
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
+          volumeMounts:
+            - mountPath: /config
+              name: config
+      hostNetwork: {{ .Values.hostNetwork }}
+      volumes:
+        - name: tmp
+          emptyDir: { }
+        - name: telegraf-config
+          configMap:
+            name: {{ include "apc-cp-sre.fullname" . }}-telegraf-config
+        - name: config
+          configMap:
+            name: {{ include "apc-cp-sre.fullname" . }}-blackbox

@@ -1,0 +1,520 @@
+---
+# Source: site-reliability-engineering/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: false
+metadata:
+  name: test-site-reliability-engineering
+  labels:
+    helm.sh/chart: site-reliability-engineering-0.2.0
+    app.kubernetes.io/name: site-reliability-engineering
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: site-reliability-engineering/templates/configmap-blackbox.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-site-reliability-engineering-blackbox
+  labels:
+    helm.sh/chart: site-reliability-engineering-0.2.0
+    app.kubernetes.io/name: site-reliability-engineering
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+data:
+  blackbox.yaml: |
+    
+    
+    
+    
+    ---
+    modules:
+      https_oauth_blocked:
+        prober: http
+        timeout: 5s
+        http:
+          valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+          valid_status_codes: [ 302 ]
+          method: GET
+          no_follow_redirects: true
+          fail_if_ssl: false
+          fail_if_not_ssl: true
+          fail_if_header_not_matches:
+            - header: location
+              regexp: 'login.windows.net'
+          tls_config:
+            insecure_skip_verify: false
+          preferred_ip_protocol: "ip4"
+          ip_protocol_fallback: false
+    
+      tls_connect:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          tls: true
+    
+      dns_shared_cluster:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "check"
+          query_type: "CNAME"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+          validate_answer_rrs:
+            fail_if_not_matches_regexp:
+              - 'aws.infra.shared_cluster.w3n.io'
+    
+      grpc:
+        prober: grpc
+        grpc:
+          tls: true
+          preferred_ip_protocol: "ip4"
+      grpc_plain:
+        prober: grpc
+        grpc:
+          tls: false
+    
+      http_visualizer:
+        prober: http
+        http:
+          valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+          valid_status_codes: [ 200 ]
+          method: GET
+          no_follow_redirects: true
+          fail_if_ssl: false
+          fail_if_not_ssl: true
+          proxy_url: "http://bridge-1234.elb.us-east-1.amazonaws.com:3128"
+          fail_if_body_not_matches_regexp:
+            - "<title>Streamlit</title>"
+          tls_config:
+            insecure_skip_verify: false
+          preferred_ip_protocol: "ip4"
+          ip_protocol_fallback: false
+    
+      http_vcs:
+        prober: http
+        http:
+          valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+          valid_status_codes: [ 200 ]
+          method: GET
+          no_follow_redirects: true
+          fail_if_ssl: false
+          fail_if_not_ssl: true
+          fail_if_body_not_matches_regexp:
+            - "hello world"
+          fail_if_header_not_matches:
+            - header: server
+              regexp: 'envoy'
+          tls_config:
+            insecure_skip_verify: false
+          preferred_ip_protocol: "ip4"
+          ip_protocol_fallback: false
+    
+      http_2xx_proxy:
+        prober: http
+        timeout: 5s
+        http:
+          proxy_url: "http://bridge-1234.elb.us-east-1.amazonaws.com:3128"
+          valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+          follow_redirects: false
+          preferred_ip_protocol: "ip4"
+    
+      # DNS checks for all services expected to have Istio Virtual Services
+      css.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "css.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      dcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "dcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      rts.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "rts.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      vcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "vcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      vcs-grpc.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "vcs-grpc.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      vms.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "vms.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      vss.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "vss.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+      visualizer.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "visualizer.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com"
+          query_type: "A"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+    
+      # apc.arene.com short FQDNs
+      visualizer.dev.api.apc.arene.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "visualizer.dev.api.apc.arene.com"
+          query_type: "CNAME"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+          validate_answer_rrs:
+            fail_if_not_matches_regexp:
+              - visualizer-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com
+    
+      # api.apc.arene.com short FQDNs
+      vcs-myapp.dev.api.apc.arene.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "vcs-myapp.dev.api.apc.arene.com"
+          query_type: "CNAME"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+          validate_answer_rrs:
+            fail_if_not_matches_regexp:
+              - vcs-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com
+      vcs-grpc-myapp.dev.api.apc.arene.com:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "vcs-grpc-myapp.dev.api.apc.arene.com"
+          query_type: "CNAME"
+          transport_protocol: 'udp'
+          preferred_ip_protocol: "ip4"
+          validate_answer_rrs:
+            fail_if_not_matches_regexp:
+              - vcs-grpc-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com
+---
+# Source: site-reliability-engineering/templates/telegraf-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-site-reliability-engineering-telegraf-config
+data:
+  telegraf.conf: |
+    
+    
+    [[inputs.internal]]
+      collect_memstats = true
+    
+    [[outputs.prometheus_client]]
+      listen = ":8125"
+      path = "/metrics"
+      metric_version = 2
+    
+    [agent]
+      interval = "60s"
+      flush_interval = "60s"
+      flush_jitter = "0s"
+    
+    # Scrape the pg exporter
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9187/metrics" ]
+    
+    # Ensure these services resolve to Istio Virtual Service endpoints
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=css.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=dcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=rts.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=vcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=vcs-grpc.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=vms.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=vss.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", "http://localhost:9115/probe?module=visualizer.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8", ]
+    
+    
+    # Ensure the shortnames on myapp.mydomain.com resolve
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=visualizer.dev.apc.arene.com&target=8.8.8.8"]
+    
+    # Ensure the shortnames on api.myapp.mydomain.com resolve
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=vcs-myapp.dev.api.apc.arene.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=vcs-grpc-myapp.dev.api.apc.arene.com&target=8.8.8.8"]
+    
+    
+    # Ensure all Istio Virtual Service endpoints resolve as A records
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=css.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=dcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=rts.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=vcs.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=vcs-grpc.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=vms.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=vss.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=visualizer.dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com&target=8.8.8.8"]
+    
+    # Ensure all Istio Virtual Services pass TLS checks
+    [[inputs.prometheus]]
+    urls = [
+    "http://localhost:9115/probe?module=tls_connect&target=css-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:443",
+    "http://localhost:9115/probe?module=tls_connect&target=dcs-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:443",
+    "http://localhost:9115/probe?module=tls_connect&target=rts-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:443",
+    "http://localhost:9115/probe?module=tls_connect&target=vms-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:443",
+    "http://localhost:9115/probe?module=tls_connect&target=vss-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.mydomain.com:443", ]
+    
+    # Ensure TLS checks on custom gateways Istio Virtual Service's
+    [[inputs.prometheus]]
+    urls = [
+    "http://localhost:9115/probe?module=tls_connect&target=visualizer.dev.api.apc.arene.com:443",
+    "http://localhost:9115/probe?module=tls_connect&target=vcs-myapp.dev.api.apc.arene.com:443",
+    "http://localhost:9115/probe?module=tls_connect&target=vcs-grpc-myapp.dev.api.apc.arene.com:443", ]
+    
+    # Check Istio Virtual Service endpoints for oauth gates
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=https_oauth_blocked&target=https://css-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.w3n.io"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=https_oauth_blocked&target=https://dcs-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.w3n.io"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=https_oauth_blocked&target=https://rts-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.w3n.io"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=https_oauth_blocked&target=https://vms-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.w3n.io"]
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=https_oauth_blocked&target=https://vss-myapp-dev.cluster-0-non-prod-us-east-1.aws.infra.shared_cluster.w3n.io"]
+    
+    # Test all gRPC endpoints
+    [[inputs.prometheus]]
+    urls = [
+    "http://localhost:9115/probe?module=grpc&target=vcs-grpc-myapp.dev.api.myapp.mydomain.com:443", ]
+    
+    # Custom check to ensure that VCS grpc on :80 is open
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=grpc_plain&target=vcs-grpc-myapp.dev.api.myapp.mydomain.com:80" ]
+    
+    # Visualizer https
+    [[inputs.prometheus]]
+    urls = [ "http://localhost:9115/probe?module=http_visualizer&target=https://visualizer.dev.myapp.mydomain.com" ]
+---
+# Source: site-reliability-engineering/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-site-reliability-engineering
+  labels:
+    helm.sh/chart: site-reliability-engineering-0.2.0
+    app.kubernetes.io/name: site-reliability-engineering
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8125
+      name: telegraf
+      protocol: TCP
+      targetPort: telegraf
+  selector:
+    app.kubernetes.io/name: site-reliability-engineering
+    app.kubernetes.io/instance: test
+---
+# Source: site-reliability-engineering/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-site-reliability-engineering
+  labels:
+    helm.sh/chart: site-reliability-engineering-0.2.0
+    app.kubernetes.io/name: site-reliability-engineering
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: site-reliability-engineering
+      app.kubernetes.io/instance: test
+  strategy:
+    null
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: site-reliability-engineering-0.2.0
+        app.kubernetes.io/name: site-reliability-engineering
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/managed-by: Helm
+      annotations:
+        prometheus.io/port: "8125"
+        prometheus.io/prefix: app.woven.arene.apc.control-plane.
+        prometheus.io/scrape: "true"
+        prometheus.istio.io/merge-metrics: "true"
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+        sidecar.istio.io/inject: "false"
+    spec:
+      automountServiceAccountToken: 
+      serviceAccountName: test-site-reliability-engineering
+      restartPolicy: 
+
+      securityContext:
+        {}  
+      containers:
+        - name: postgres-exporter
+          image: docker.artifactory-ha.tmc-stargate.com/arene/plane/core/sre/postgres-exporter:v0.12.1
+          imagePullPolicy: Always
+          env:
+            - name: DATA_SOURCE_URI
+              value: "db.mydomain.com:5432/postgres"
+
+
+
+
+
+            - name: PG_EXPORTER_INCLUDE_DATABASES
+              value: postgres
+
+
+            - name: DB_PORT
+              value: "5432"
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: database-credentials
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: database-credentials
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          ports:
+            - name: pg-exporter
+              containerPort: 9187
+          resources:
+            limits:
+              cpu: 200m
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 1Gi
+
+        - name: telegraf
+          image: docker.artifactory-ha.tmc-stargate.com/arene/plane/core/sre/telegraf:1.25
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          livenessProbe:
+            httpGet:
+              port: telegraf
+              path: /metrics
+          readinessProbe:
+            httpGet:
+              port: telegraf
+              path: /metrics
+          volumeMounts:
+            - name: telegraf-config
+              mountPath: /etc/telegraf
+          ports:
+            - name: telegraf
+              containerPort: 8125
+          resources:
+            limits:
+              cpu: 200m
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 1Gi
+
+        - name: blackbox-exporter
+          image: "quay.io/prometheus/blackbox-exporter:latest"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+          args:
+            - "--log.level=debug"
+            - "--config.file=/config/blackbox.yaml"
+          resources:
+            limits:
+              cpu: 200m
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 1Gi
+          ports:
+            - containerPort: 9115
+              name: blackbox
+          livenessProbe:
+            null
+          readinessProbe:
+            null
+          volumeMounts:
+            - mountPath: /config
+              name: config
+      hostNetwork: 
+      volumes:
+        - name: tmp
+          emptyDir: { }
+        - name: telegraf-config
+          configMap:
+            name: test-site-reliability-engineering-telegraf-config
+        - name: config
+          configMap:
+            name: test-site-reliability-engineering-blackbox

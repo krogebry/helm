@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apc-cp-sre.fullname" . }}
+  labels:
+    {{- include "apc-cp-sre.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      name: telegraf
+      protocol: TCP
+      targetPort: telegraf
+  selector:
+    {{- include "apc-cp-sre.selectorLabels" . | nindent 4 }}

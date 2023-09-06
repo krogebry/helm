@@ -1,0 +1,79 @@
+---
+# Use this file to test locally
+modules:
+  http_2xx_proxy:
+    prober: http
+    http:
+      proxy_url: http://10.211.55.8:3128
+      method: GET
+
+  https_oauth_blocked:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: [ "HTTP/1.1", "HTTP/2.0" ]
+      valid_status_codes: [ 302 ]  # Defaults to 2xx
+      method: GET
+      no_follow_redirects: true
+      fail_if_ssl: false
+      fail_if_not_ssl: true
+      fail_if_header_not_matches:
+        - header: location
+          regexp: 'login.windows.net'
+      tls_config:
+        insecure_skip_verify: false
+      preferred_ip_protocol: "ip4"
+      ip_protocol_fallback: false
+
+  visualizer.dev.apc.arene.com:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "visualizer.dev.apc.arene.com"
+      query_type: "CNAME"
+      transport_protocol: 'udp'
+      preferred_ip_protocol: "ip4"
+      validate_answer_rrs:
+        fail_if_not_matches_regexp:
+          - "ui-client-apc-cp-dev.gc-0-apps-ap-northeast-1.aws.infra.mtfuji.w3n.io"
+
+  tls_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      tls: true
+
+  http_post_2xx:
+    prober: http
+    http:
+      method: POST
+
+  tcp_connect:
+    prober: tcp
+
+
+  grpc:
+    prober: grpc
+    grpc:
+      tls: true
+      preferred_ip_protocol: "ip4"
+
+  grpc_plain:
+    prober: grpc
+    grpc:
+      tls: false
+      service: "service1"
+  ssh_banner:
+    prober: tcp
+    tcp:
+      query_response:
+        - expect: "^SSH-2.0-"
+        - send: "SSH-2.0-blackbox-ssh-check"
+
+  icmp:
+    prober: icmp
+  icmp_ttl5:
+    prober: icmp
+    timeout: 5s
+    icmp:
+      ttl: 5
