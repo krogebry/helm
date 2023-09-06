@@ -112,3 +112,5 @@ USER actions
 ENV COMPlus_EnableDiagnostics=0
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "./entrypoint.sh"]
+
+# RUN git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
