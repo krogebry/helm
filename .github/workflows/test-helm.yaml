@@ -22,6 +22,7 @@ jobs:
     uses: krogebry/workflows/.github/workflows/build-helm.yaml@cicd-test
     with:
       publish: false
+      application_name: myapp
       helm_repo_name: krogebry
       helm_chart_path: charts/app-backend
       helm_chart_test_path: test/no_values
