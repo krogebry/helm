@@ -4,9 +4,11 @@ FROM releases-docker.jfrog.io/jfrog/jfrog-cli-v2-jf:2.45.0 AS jfrog
 
 FROM jnorwood/helm-docs:latest AS helm-docs
 
-FROM golangci/golangci-lint:v1.53 AS golangci-lint
+FROM golangci/golangci-lint:v1.54 AS golangci-lint
 
 FROM docker:24.0-dind AS dind
+
+FROM golang:1.21.0-bookworm as go
 
 FROM debian:bookworm-slim
 
@@ -19,13 +21,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     git gh \
     kubernetes-client \
     python3 python3-pip \
-    nodejs npm golang \
-    skopeo unzip watch sudo openssh-client \
-    bsdmainutils \
+    unzip watch openssh-client \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Terraform Version manager
-ENV TF_VERSION=1.3.7
+ENV TF_VERSION=1.5.6
 ENV PATH=${PATH}:/opt/tfenv/bin
 RUN git clone --depth=1 https://github.com/tfutils/tfenv.git /opt/tfenv && \
     tfenv install ${TF_VERSION} && \
@@ -92,6 +92,9 @@ COPY --from=helm-docs /usr/bin/helm-docs /usr/local/bin/helm-docs
 
 # JFrog CLI
 COPY --from=jfrog /usr/local/bin/jf /usr/local/bin/jf
+
+COPY --from=go /usr/local/go/ /usr/local/go/
+ENV PATH=${PATH}:/usr/local/go/bin/
 
 # Go test format
 RUN go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest && \

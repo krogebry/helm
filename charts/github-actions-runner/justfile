@@ -14,3 +14,12 @@ regcred:
 
 install:
     helm upgrade --install ghr . --set "runner.ghr_pat_token=$(cat ~/.github/token)"
+
+ecr-login:
+    aws ecr \
+      get-login-password \
+      --region us-east-1 | docker login \
+      --username AWS \
+      --password-stdin \
+      903369196314.dkr.ecr.us-east-1.amazonaws.com
+
