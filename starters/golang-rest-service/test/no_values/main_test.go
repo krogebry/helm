@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 	}
 
 	deploymentOptions.ServiceAccountName = config.StackId
-	deploymentOptions.ImagePullSecretName = fmt.Sprintf("%s-stargate-artifactory-docker", config.ContainerName)
+	deploymentOptions.ImagePullSecretName = fmt.Sprintf("%s-docker-credentials", config.ContainerName)
 
 	m.Run()
 }
@@ -86,22 +86,22 @@ func TestDeploymentSecurity(t *testing.T) {
 
 // Secret tests
 func TestSecretStore(t *testing.T) {
-	secretStoreVaultOptions.JWTRole = "jwt_mtfuji_gc_0_apps_us_east_1_cloud_services_dev"
-	secretStoreVaultOptions.ServiceAccountName = "cloud-services-grpc"
+	secretStoreVaultOptions.JWTRole = "jwt_dev"
+	secretStoreVaultOptions.ServiceAccountName = "grpc"
 	htSecrets.TestSecretStoreForVault(t, config, secretStoreVaultOptions)
 }
 
 func TestExternalSecretDockerRegcred(t *testing.T) {
 	htSecrets.TestExternalSecret(t, config, htSecrets.ExternalSecretOptions{
-		Name:               fmt.Sprintf("%s-stargate-artifactory-docker", config.ContainerName),
-		RemoteKeyRef:       "stargate-artifactory-regcred-docker",
+		Name:               fmt.Sprintf("%s-docker-credentials", config.ContainerName),
+		RemoteKeyRef:       "regcred-docker",
 		SecretStoreRefName: config.ContainerName,
 	})
 }
 
 func TestArtifactoryRegistrySecret(t *testing.T) {
 	htSecrets.TestArtifactoryRegistrySecret(t, config, htSecrets.ArtifactoryRegistrySecretOptions{
-		Name: fmt.Sprintf("%s-stargate-artifactory-docker", config.ContainerName),
+		Name: fmt.Sprintf("%s-docker-credentials", config.ContainerName),
 	})
 }
 

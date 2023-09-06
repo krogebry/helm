@@ -1,8 +1,12 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "test.name" -}}
+{{- define "app-backend.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "mtf-fqdn" -}}
+{{ .Values.shared_clusteri.app_name }}-{{ .Values.shared_clusteri.namespace_name }}.{{ .Values.shared_clusteri.cluster_family_name }}-{{.Values.shared_clusteri.cluster_family_id }}-{{.Values.shared_clusteri.env_name }}-{{ .Values.shared_clusteri.region}}.{{ .Values.shared_clusteri.cloud }}.{{ .Values.shared_clusteri.domain }}
 {{- end }}
 
 {{/*
@@ -10,7 +14,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "test.fullname" -}}
+{{- define "app-backend.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +30,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "test.chart" -}}
+{{- define "app-backend.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "test.labels" -}}
-helm.sh/chart: {{ include "test.chart" . }}
-{{ include "test.selectorLabels" . }}
+{{- define "app-backend.labels" -}}
+helm.sh/chart: {{ include "app-backend.chart" . }}
+{{ include "app-backend.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +49,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "test.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "test.name" . }}
+{{- define "app-backend.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "app-backend.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "test.serviceAccountName" -}}
+{{- define "app-backend.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "test.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "app-backend.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

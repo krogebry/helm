@@ -1,4 +1,4 @@
-# Default values for test
+# Default values for app-backend
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -29,7 +29,7 @@ database:
 replicaCount: 1
 
 image:
-  repository: docker.com/test
+  repository: docker.com/app-backend
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "dev"

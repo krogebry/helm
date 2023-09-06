@@ -1,0 +1,5 @@
+#!/usr/bin/env just --justfile
+STARTER_PATH := `realpath "$(pwd)/../starters"`
+
+start-app-backend:
+    helm -p {{ STARTER_PATH }}/golang-rest-service create app-backend
