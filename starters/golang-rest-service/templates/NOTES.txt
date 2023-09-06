@@ -1,1 +1,1 @@
-Your Virtual Service Address: https://{{ include "mtf-fqdn" . }}
+Your Virtual Service Address: https://hostname

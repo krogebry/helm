@@ -29,6 +29,8 @@ func TestMain(m *testing.M) {
 		config.Debug = true
 	}
 
+	deploymentOptions.NumberOfVolumes = 2
+
 	config.ContainerName = config.StackId
 	config.DeploymentName = config.StackId
 
@@ -101,7 +103,7 @@ func TestExternalSecretDockerRegcred(t *testing.T) {
 
 func TestArtifactoryRegistrySecret(t *testing.T) {
 	htSecrets.TestArtifactoryRegistrySecret(t, config, htSecrets.ArtifactoryRegistrySecretOptions{
-		Name: fmt.Sprintf("%s-docker-credentials", config.ContainerName),
+		Name: "ext-docker-regcred",
 	})
 }
 

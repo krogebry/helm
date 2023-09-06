@@ -1,1 +1,1 @@
-Your Virtual Service Address: https://domain.fqdn.com
+Your Virtual Service Address: https://hostname

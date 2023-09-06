@@ -1,6 +1,6 @@
 name: Helm build cloud-services charts
 
-# bkroger0
+# bkroger0123
 
 on:
   push:
@@ -19,9 +19,10 @@ permissions:
 
 jobs:
   test-basic-application:
-    uses: krogebry/workflows/.github/workflows/build-helm.yaml@v0.1.0
+    uses: krogebry/workflows/.github/workflows/build-helm.yaml@cicd-test
     with:
       publish: false
+      application_name: myapp
       helm_repo_name: krogebry
       helm_chart_path: charts/app-backend
       helm_chart_test_path: test/no_values
@@ -29,6 +30,5 @@ jobs:
       helm_values_path: .deploy/no_values
     secrets:
       git_ssh_key: ${{ secrets.GIT_SSH_KEY }}
-      sg_github_token: ${{ secrets.SG_GITHUB_LEGACY_TOKEN }}
       docker_username: ${{ secrets.DOCKER_USERNAME }}
       docker_password: ${{ secrets.DOCKER_PASSWORD }}

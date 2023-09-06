@@ -1,4 +1,4 @@
-# Default values for test
+# Default values for app-backend
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -29,7 +29,7 @@ database:
 replicaCount: 1
 
 image:
-  repository: docker.com/test
+  repository: docker.com/app-backend
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "dev"
@@ -58,8 +58,8 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
   runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
+  runAsUser: 10000
+  runAsGroup: 10000
   privileged: false
   capabilities:
     drop:
@@ -89,9 +89,11 @@ resources:
   requests:
     cpu: "200m"
     memory: "2000Mi"
+    ephemeral-storage: "1Gi"
   limits:
     cpu: "400m"
     memory: "4000Mi"
+    ephemeral-storage: "2Gi"
 
 autoscaling:
   enabled: false

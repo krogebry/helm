@@ -58,8 +58,8 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
   runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
+  runAsUser: 10000
+  runAsGroup: 10000
   privileged: false
   capabilities:
     drop:
@@ -89,9 +89,11 @@ resources:
   requests:
     cpu: "200m"
     memory: "2000Mi"
+    ephemeral-storage: "1Gi"
   limits:
     cpu: "400m"
     memory: "4000Mi"
+    ephemeral-storage: "2Gi"
 
 autoscaling:
   enabled: false
